@@ -1,19 +1,24 @@
 <?php
-require '../config.php';
+require_once '../config.php';
 
-if (!isset($_SESSION['admin'])) {
-    header("Location: login.php");
+// admin protection
+if (
+    !isset($_SESSION['user']) ||
+    $_SESSION['user']['role'] !== 'admin'
+) {
+    header("Location: ../login.php");
     exit;
 }
 
-// use main site header/footer
+// use main modern header
 include __DIR__ . '/../partials/header.php';
 ?>
 
-<h2 class="mt-3 mb-3">All Bookings</h2>
+<h2>All Bookings</h2>
 
-<table class="table table-bordered table-striped">
-<thead class="table-dark">
+<div class="card">
+<table class="table">
+<thead>
 <tr>
     <th>Ticket</th>
     <th>User</th>
@@ -28,32 +33,40 @@ include __DIR__ . '/../partials/header.php';
 
 <?php
 $q = $conn->query("
-SELECT b.*, u.name AS user_name
-FROM bookings b
-LEFT JOIN users u ON u.id = b.user_id
-ORDER BY b.id DESC
+    SELECT b.*, u.name AS user_name
+    FROM bookings b
+    LEFT JOIN users u ON u.id = b.user_id
+    ORDER BY b.id DESC
 ");
 
 while ($b = $q->fetch_assoc()):
-
     $ps = $conn->query("
-        SELECT name, seat_no, cancel_status 
-        FROM passengers 
+        SELECT name, seat_no, cancel_status
+        FROM passengers
         WHERE booking_id = {$b['id']}
     ");
 ?>
 
 <tr>
-    <td><strong><?= $b['ticket_no'] ?></strong></td>
+    <td><strong><?= htmlspecialchars($b['ticket_no']) ?></strong></td>
 
-    <td><?= $b['user_name'] ?></td>
+    <td><?= htmlspecialchars($b['user_name']) ?></td>
 
     <td>
         <?php while ($p = $ps->fetch_assoc()): ?>
-            <?= $p['name'] ?> (Seat <?= $p['seat_no'] ?>)
-            
-            <?php if ($p['cancel_status'] != 'ACTIVE'): ?>
-                <span class="badge bg-danger ms-1">cancelled</span>
+            <?= htmlspecialchars($p['name']) ?>
+            (Seat <?= htmlspecialchars($p['seat_no']) ?>)
+
+            <?php if ($p['cancel_status'] !== 'ACTIVE'): ?>
+                <span style="
+                  background:#ff4d4d;
+                  color:white;
+                  padding:2px 6px;
+                  border-radius:6px;
+                  font-size:12px;
+                  margin-left:6px;">
+                  cancelled
+                </span>
             <?php endif; ?>
             <br>
         <?php endwhile; ?>
@@ -62,15 +75,29 @@ while ($b = $q->fetch_assoc()):
     <td>₹<?= number_format($b['total_price'], 2) ?></td>
 
     <td>
-        <?php if ($b['cancel_status'] == 'ACTIVE'): ?>
-            <span class="badge bg-success">ACTIVE</span>
+        <?php if ($b['status'] === 'CONFIRMED'): ?>
+            <span style="
+              background:#16a34a;
+              color:white;
+              padding:4px 10px;
+              border-radius:999px;
+              font-size:12px;">
+              CONFIRMED
+            </span>
         <?php else: ?>
-            <span class="badge bg-secondary"><?= $b['cancel_status'] ?></span>
+            <span style="
+              background:#475569;
+              color:white;
+              padding:4px 10px;
+              border-radius:999px;
+              font-size:12px;">
+              <?= htmlspecialchars($b['status']) ?>
+            </span>
         <?php endif; ?>
     </td>
 
     <td>
-        <a class="btn btn-primary btn-sm"
+        <a class="btn"
            href="booking_view.php?id=<?= $b['id'] ?>">
            View
         </a>
@@ -81,7 +108,6 @@ while ($b = $q->fetch_assoc()):
 
 </tbody>
 </table>
+</div>
 
-<?php
-include __DIR__ . '/../partials/footer.php';
-?>
+<?php include __DIR__ . '/../partials/footer.php'; ?>

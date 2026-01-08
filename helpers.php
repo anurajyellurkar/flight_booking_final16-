@@ -1,8 +1,19 @@
-
 <?php
-function takenSeats($c,$f){
-  $q=$c->prepare("SELECT seat_no FROM passengers p JOIN bookings b ON p.booking_id=b.id WHERE b.flight_id=? AND b.status='CONFIRMED'");
-  $q->bind_param("i",$f); $q->execute(); $r=$q->get_result();
-  $out=[]; while($x=$r->fetch_assoc()) $out[]=$x['seat_no']; return $out;
+function takenSeats($conn, $flight_id) {
+    $stmt = $conn->prepare("
+        SELECT p.seat_no
+        FROM passengers p
+        JOIN bookings b ON b.id = p.booking_id
+        WHERE b.flight_id = ?
+          AND p.cancel_status = 'ACTIVE'
+    ");
+    $stmt->bind_param("i", $flight_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    $seats = [];
+    while ($row = $res->fetch_assoc()) {
+        $seats[] = $row['seat_no'];
+    }
+    return $seats;
 }
-?>

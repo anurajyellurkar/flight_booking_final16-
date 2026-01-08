@@ -1,63 +1,132 @@
-<?php include 'dashboard_header.php'; ?>
-<?php include 'auth.php';
+<?php
+require_once 'dashboard_header.php';
+require_once '../helpers_seat.php'; // for initSeatsForFlight()
 
-if(isset($_POST['add'])){
- $s=$conn->prepare("INSERT INTO flights(aircraft_type,flight_no,origin,destination,depart_time,arrive_time,price_economy,price_business,total_seats)
-                    VALUES(?,?,?,?,?,?,?,?,?)");
- $s->bind_param("sssssddii",
-   $_POST['no'],$_POST['ac'], $_POST['o'],$_POST['d'],
-   $_POST['dt'],$_POST['at'],
-   $_POST['pe'],$_POST['pb'],
-   $_POST['ts']
- );
- $s->execute();
+$error = '';
+$success = '';
+
+// HANDLE ADD FLIGHT
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $stmt = $conn->prepare("
+        INSERT INTO flights
+        (aircraft_type, flight_no, origin, destination,
+         depart_time, arrive_time, price_economy, price_business, total_seats)
+        VALUES (?,?,?,?,?,?,?,?,?)
+    ");
+
+    if (!$stmt) {
+        $error = "Prepare failed: " . $conn->error;
+    } else {
+        $stmt->bind_param(
+            "ssssssddi",
+            $_POST['aircraft_type'],
+            $_POST['flight_no'],
+            $_POST['origin'],
+            $_POST['destination'],
+            $_POST['depart_time'],
+            $_POST['arrive_time'],
+            $_POST['price_economy'],
+            $_POST['price_business'],
+            $_POST['total_seats']
+        );
+
+        if ($stmt->execute()) {
+            $flight_id = $stmt->insert_id;
+
+            // 🔑 AUTO CREATE SEATS
+            initSeatsForFlight(
+                $conn,
+                $flight_id,
+                $_POST['aircraft_type']
+            );
+
+            $success = "Flight added successfully";
+        } else {
+            $error = "Insert failed: " . $stmt->error;
+        }
+    }
 }
 
-if(isset($_GET['del'])){
-  $conn->query("DELETE FROM flights WHERE id=".intval($_GET['del']));
+// DELETE FLIGHT
+if (isset($_GET['del'])) {
+    $conn->query("DELETE FROM flights WHERE id=".(int)$_GET['del']);
 }
 
-$r=$conn->query("SELECT * FROM flights ORDER BY id DESC");
+$flights = $conn->query("SELECT * FROM flights ORDER BY id DESC");
 ?>
-<div class=card><a href="bookings.php">Bookings</a></div>
 
-<div class=card>
+<?php if ($error): ?>
+<div class="card" style="color:#ff6b6b"><?= htmlspecialchars($error) ?></div>
+<?php endif; ?>
+
+<?php if ($success): ?>
+<div class="card" style="color:#7CFF7C"><?= htmlspecialchars($success) ?></div>
+<?php endif; ?>
+
+<div class="card">
 <h3>Add Flight</h3>
-<form method=POST>
-  <input name=no placeholder="Flight No" required>
-  <input name=o placeholder="From" required>
-  <input name=d placeholder="To" required><br><br>
 
-  Depart <input type=datetime-local name=dt required>
-  Arrive <input type=datetime-local name=at required><br><br>
+<form method="POST">
 
-  Economy <input type=number step=.01 name=pe required>
-  Business <input type=number step=.01 name=pb required>
-  Aircraft <select name='ac'><option value='A320'>A320</option><option value='B737'>B737</option></select><br><br>
-Seats <input type='number' name='ts' value='30' min='1' required><br><br>
+Aircraft<br>
+<select name="aircraft_type" required>
+  <option value="A320">A320</option>
+  <option value="B737">B737</option>
+</select><br><br>
 
-  <button name=add>Add Flight</button>
+Flight No<br>
+<input name="flight_no" required><br><br>
+
+From<br>
+<input name="origin" required>
+
+To<br>
+<input name="destination" required><br><br>
+
+Depart<br>
+<input type="datetime-local" name="depart_time" required>
+
+Arrive<br>
+<input type="datetime-local" name="arrive_time" required><br><br>
+
+Economy Price<br>
+<input type="number" step="0.01" name="price_economy" required>
+
+Business Price<br>
+<input type="number" step="0.01" name="price_business" required><br><br>
+
+Total Seats<br>
+<input type="number" name="total_seats" value="30" required><br><br>
+
+<button type="submit">Add Flight</button>
 </form>
 </div>
 
-<table class=table>
+<div class="card">
+<h3>Flights</h3>
+<table class="table">
 <tr>
-  <th>No</th>
-  <th>Route</th>
-  <th>Economy</th>
-  <th>Business</th>
-  <th>Total Seats</th>
-  <th>Delete</th>
+<th>No</th><th>Route</th><th>Economy</th><th>Business</th><th>Seats</th><th>Delete</th>
 </tr>
-<?php while($f=$r->fetch_assoc()): ?>
+
+<?php if ($flights->num_rows === 0): ?>
+<tr><td colspan="6">No flights added yet</td></tr>
+<?php endif; ?>
+
+<?php while ($f = $flights->fetch_assoc()): ?>
 <tr>
-  <td><?=$f['flight_no']?></td>
-  <td><?=$f['origin']?> → <?=$f['destination']?></td>
-  <td>₹<?=$f['price_economy']?></td>
-  <td>₹<?=$f['price_business']?></td>
-  <td><?=$f['total_seats']?></td>
-  <td><a href="?del=<?=$f['id']?>">Delete</a></td>
+<td><?= htmlspecialchars($f['flight_no']) ?></td>
+<td><?= htmlspecialchars($f['origin']) ?> → <?= htmlspecialchars($f['destination']) ?></td>
+<td>₹<?= $f['price_economy'] ?></td>
+<td>₹<?= $f['price_business'] ?></td>
+<td><?= $f['total_seats'] ?></td>
+<td><a href="?del=<?= $f['id'] ?>">Delete</a></td>
 </tr>
 <?php endwhile; ?>
 </table>
-<?php echo '</div></body></html>'; ?>
+</div>
+
+</div>
+</body>
+</html>

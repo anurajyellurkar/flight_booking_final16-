@@ -1,8 +1,9 @@
-
 <?php
-function log_action($conn,$uid,$role,$action,$details){
- $st=$conn->prepare("INSERT INTO audit_log(user_id,role,action,details) VALUES(?,?,?,?)");
- $st->bind_param("isss",$uid,$role,$action,$details);
- $st->execute();
+function log_action($conn, $user_id, $role, $action, $details) {
+    $stmt = $conn->prepare("
+        INSERT INTO audit_log (user_id, role, action, details)
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmt->bind_param("isss", $user_id, $role, $action, $details);
+    $stmt->execute();
 }
-?>

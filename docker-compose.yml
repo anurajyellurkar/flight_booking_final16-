@@ -1,17 +1,20 @@
-version: '3.8'
-
 services:
   web:
     build: .
+    container_name: flight_booking_web
     ports:
       - "8080:80"
     depends_on:
       - db
+    volumes:
+      - .:/var/www/html
 
   db:
     image: mysql:8.0
+    container_name: flight_booking_db
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: flightdb
+      MYSQL_DATABASE: flight_booking
     volumes:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql

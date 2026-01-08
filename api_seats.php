@@ -1,19 +1,21 @@
 <?php
-require "config.php";
+require_once 'config.php';
 
-$flight_id = intval($_GET['flight_id']);
-
+$flight_id = (int)($_GET['flight_id'] ?? 0);
 $data = [];
 
-$q = $conn->query("
-    SELECT seat_no, status 
-    FROM seats 
-    WHERE flight_id=$flight_id
+$q = $conn->prepare("
+    SELECT seat_no, status
+    FROM seats
+    WHERE flight_id = ?
 ");
+$q->bind_param("i", $flight_id);
+$q->execute();
+$r = $q->get_result();
 
-while($r = $q->fetch_assoc()){
-    $data[$r['seat_no']] = $r['status'];
+while ($row = $r->fetch_assoc()) {
+    $data[$row['seat_no']] = $row['status'];
 }
 
+header('Content-Type: application/json');
 echo json_encode($data);
-?>

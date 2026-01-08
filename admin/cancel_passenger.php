@@ -1,51 +1,52 @@
 <?php
-require '../config.php';
+require_once '../config.php';
+require_once '../lib/audit.php';
+require_once 'auth.php';
 
-if (!isset($_SESSION['admin'])) {
-    header("Location: login.php");
+$pid = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$booking_id = isset($_GET['booking']) ? intval($_GET['booking']) : 0;
+
+if ($pid <= 0) {
+    header('Location: bookings.php');
     exit;
 }
 
-if (!isset($_GET['id'])) {
-    die("Invalid passenger");
-}
-
-$pid = intval($_GET['id']);
-
-// get passenger info
-$p = $conn->query("
-    SELECT p.*, b.flight_id 
-    FROM passengers p
-    JOIN bookings b ON b.id = p.booking_id
-    WHERE p.id = $pid
-")->fetch_assoc();
-
+// fetch passenger with booking
+$stmt = $conn->prepare("
+  SELECT p.*, b.flight_id
+  FROM passengers p
+  JOIN bookings b ON b.id = p.booking_id
+  WHERE p.id = ?
+");
+$stmt->bind_param("i", $pid);
+$stmt->execute();
+$p = $stmt->get_result()->fetch_assoc();
 if (!$p) {
-    die("Invalid passenger");
+    header('Location: bookings.php');
+    exit;
 }
 
-// mark passenger cancelled
-$conn->query("
-    UPDATE passengers 
-    SET cancel_status='CANCELLED_ADMIN', refund_status='PENDING' 
-    WHERE id = $pid
+// update passenger cancel + refund status
+$u = $conn->prepare("
+  UPDATE passengers
+  SET cancel_status='CANCELLED_ADMIN', refund_status='PENDING'
+  WHERE id = ?
 ");
+$u->bind_param("i", $pid);
+$u->execute();
 
-// free seat again
-$conn->query("
-    UPDATE seats 
-    SET status='FREE', held_until=NULL
-    WHERE flight_id={$p['flight_id']} 
-      AND seat_no='{$p['seat_no']}'
+// free seat in seats table
+$free = $conn->prepare("
+  UPDATE seats
+  SET status='FREE', held_until = NULL
+  WHERE flight_id = ? AND seat_no = ? AND status IN ('HELD','BOOKED')
 ");
+$free->bind_param("is", $p['flight_id'], $p['seat_no']);
+$free->execute();
 
-// add audit log
-$conn->query("
-    INSERT INTO audit_log(user_id, role, action, details)
-    VALUES (NULL, 'ADMIN', 'CANCEL PASSENGER',
-    'Passenger {$p['name']} (Seat {$p['seat_no']}) cancelled by admin')
-");
+// audit
+log_action($conn, $_SESSION['user']['id'], 'ADMIN', 'CANCEL_PASSENGER',
+    "Passenger {$p['name']} (Seat {$p['seat_no']}) cancelled by admin");
 
-header("Location: booking_view.php?id=" . $p['booking_id']);
+header("Location: booking_view.php?id=" . ($booking_id ?: $p['booking_id']));
 exit;
-?>
