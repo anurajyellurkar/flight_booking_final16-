@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "flight-booking:latest"
         TRIVY = "/opt/homebrew/bin/trivy"
+        TRIVY_CACHE_DIR = "${WORKSPACE}/.trivycache"
     }
 
     stages {
@@ -16,15 +17,25 @@ pipeline {
             }
         }
 
-        stage('Security Scan - Trivy (Offline Safe)') {
+        stage('Trivy DB Bootstrap (First Run Only)') {
             steps {
-                echo "🔐 Running Trivy filesystem scan (offline-safe)"
+                echo "⬇️ Downloading Trivy vulnerability DB (one-time)"
+                sh '''
+                mkdir -p ${TRIVY_CACHE_DIR}
+                ${TRIVY} --cache-dir ${TRIVY_CACHE_DIR} image --download-db-only || true
+                '''
+            }
+        }
+
+        stage('Security Scan - Trivy (Stable Offline Mode)') {
+            steps {
+                echo "🔐 Running Trivy filesystem scan"
                 sh '''
                 export TRIVY_DISABLE_DOCKER_CREDENTIALS=true
-                export TRIVY_OFFLINE_SCAN=true
                 export TRIVY_NO_PROGRESS=true
 
                 ${TRIVY} fs \
+                  --cache-dir ${TRIVY_CACHE_DIR} \
                   --skip-db-update \
                   --skip-java-db-update \
                   --ignore-unfixed \
