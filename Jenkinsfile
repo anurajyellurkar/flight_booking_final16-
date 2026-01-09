@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = "flight-booking:latest"
-        TRIVY = "/opt/homebrew/bin/trivy"
-        TRIVY_CACHE_DIR = "${WORKSPACE}/.trivycache"
+        TRIVY_IMAGE = "aquasec/trivy:latest"
     }
 
     stages {
@@ -17,31 +16,20 @@ pipeline {
             }
         }
 
-        stage('Trivy DB Bootstrap (First Run Only)') {
+        stage('Security Scan - Trivy (Dockerized)') {
             steps {
-                echo "⬇️ Downloading Trivy vulnerability DB (one-time)"
+                echo "🔐 Running Trivy filesystem scan via Docker"
                 sh '''
-                mkdir -p ${TRIVY_CACHE_DIR}
-                ${TRIVY} --cache-dir ${TRIVY_CACHE_DIR} image --download-db-only || true
-                '''
-            }
-        }
-
-        stage('Security Scan - Trivy (Stable Offline Mode)') {
-            steps {
-                echo "🔐 Running Trivy filesystem scan"
-                sh '''
-                export TRIVY_DISABLE_DOCKER_CREDENTIALS=true
-                export TRIVY_NO_PROGRESS=true
-
-                ${TRIVY} fs \
-                  --cache-dir ${TRIVY_CACHE_DIR} \
-                  --skip-db-update \
-                  --skip-java-db-update \
+                docker run --rm \
+                  -v "$PWD:/project" \
+                  -v "$HOME/.cache/trivy:/root/.cache/" \
+                  ${TRIVY_IMAGE} \
+                  fs \
+                  --no-progress \
                   --ignore-unfixed \
                   --severity HIGH,CRITICAL \
                   --exit-code 0 \
-                  .
+                  /project
                 '''
             }
         }
