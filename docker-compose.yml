@@ -1,9 +1,8 @@
 services:
   web:
     build: .
-    container_name: flight_booking_web
     ports:
-      - "8082:80"        # 🔴 NOT 8080 (8080 is Jenkins)
+      - "8083:80"          # ✅ Web app
     depends_on:
       - db
     environment:
@@ -15,7 +14,6 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: flight_booking_db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -24,7 +22,7 @@ services:
       - db_data:/var/lib/mysql
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
     ports:
-      - "3306:3306"
+      - "3307:3306"        # ✅ avoid conflict with local MySQL
 
 volumes:
   db_data:
