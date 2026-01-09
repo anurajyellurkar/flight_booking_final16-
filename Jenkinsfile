@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        DOCKER = "/usr/local/bin/docker"
         IMAGE_NAME = "flight-booking:latest"
         TRIVY_IMAGE = "aquasec/trivy:latest"
     }
@@ -20,7 +21,7 @@ pipeline {
             steps {
                 echo "🔐 Running Trivy filesystem scan via Docker"
                 sh '''
-                docker run --rm \
+                ${DOCKER} run --rm \
                   -v "$PWD:/project" \
                   -v "$HOME/.cache/trivy:/root/.cache/" \
                   ${TRIVY_IMAGE} \
@@ -37,7 +38,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Building Docker image"
-                sh 'docker build -t ${IMAGE_NAME} .'
+                sh '${DOCKER} build -t ${IMAGE_NAME} .'
             }
         }
 
@@ -45,8 +46,8 @@ pipeline {
             steps {
                 echo "🚀 Deploying application"
                 sh '''
-                docker compose down
-                docker compose up -d --build
+                ${DOCKER} compose down
+                ${DOCKER} compose up -d --build
                 '''
             }
         }
