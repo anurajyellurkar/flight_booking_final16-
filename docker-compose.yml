@@ -1,8 +1,10 @@
+name: flight-booking
+
 services:
   web:
     build: .
     ports:
-      - "8095:80"
+      - "8095:80"        # Web app
     depends_on:
       - db
     environment:
@@ -20,7 +22,8 @@ services:
       MYSQL_DATABASE: flight_booking
     volumes:
       - db_data:/var/lib/mysql
-      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    # ❌ no ports → avoids conflicts
 
 volumes:
   db_data:
