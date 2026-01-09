@@ -2,7 +2,7 @@ services:
   web:
     build: .
     ports:
-      - "8090:80"
+      - "8090:80"          # Web app runs on 8090
     depends_on:
       - db
     environment:
@@ -14,13 +14,14 @@ services:
 
   db:
     image: mysql:8.0
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: flight_booking
     volumes:
       - db_data:/var/lib/mysql
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    restart: always
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    # ❌ NO ports here → avoids conflicts
 
 volumes:
   db_data:
