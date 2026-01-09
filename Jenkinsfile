@@ -4,6 +4,8 @@ pipeline {
     environment {
         IMAGE_NAME = "flight-booking:latest"
         TRIVY_PATH = "/opt/homebrew/bin/trivy"
+        TRIVY_DISABLE_DOCKER_CREDENTIALS = "true"
+        TRIVY_SKIP_DB_UPDATE = "true"
     }
 
     stages {
@@ -20,6 +22,8 @@ pipeline {
             steps {
                 echo "🔐 Running Trivy security scan"
                 sh '''
+                export TRIVY_DISABLE_DOCKER_CREDENTIALS=true
+                export TRIVY_SKIP_DB_UPDATE=true
                 ${TRIVY_PATH} fs --exit-code 0 --severity HIGH,CRITICAL .
                 '''
             }
