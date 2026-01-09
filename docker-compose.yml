@@ -1,20 +1,8 @@
 services:
-  web:
-    build: .
-    container_name: flight_booking_web
-    ports:
-      - "8083:80"
-    depends_on:
-      - db
-
   db:
     image: mysql:8.0
-    container_name: flight_booking_db
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: flight_booking
-    volumes:
-      - db_data:/var/lib/mysql
+    # ❌ NO container_name
 
-volumes:
-  db_data:
+  web:
+    build: .
+    # ❌ NO container_name
