@@ -2,7 +2,7 @@ services:
   web:
     build: .
     ports:
-      - "8090:80"          # Web app runs on 8090
+      - "8090:80"        # Web App
     depends_on:
       - db
     environment:
@@ -21,7 +21,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-    # ❌ NO ports here → avoids conflicts
+    # ❌ NO ports → avoids conflicts
 
 volumes:
   db_data:
