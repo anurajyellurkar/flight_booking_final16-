@@ -1,27 +1,16 @@
-version: "3.9"
-
 services:
   web:
     build: .
     ports:
-      - "8080:80"
+      - "8082:80"
     depends_on:
       - db
-    environment:
-      DB_HOST: db
-      DB_USER: root
-      DB_PASS: root
-      DB_NAME: flight_booking
-    restart: always
 
   db:
     image: mysql:8.0
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: flight_booking
     volumes:
-      - db_data:/var/lib/mysql
-    restart: always
-
-volumes:
-  db_data:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
