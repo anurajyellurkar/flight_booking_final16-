@@ -3,13 +3,14 @@ pipeline {
 
     environment {
         IMAGE_NAME = "flight-booking:latest"
+        TRIVY_PATH = "/opt/homebrew/bin/trivy"
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                echo "📥 Cloning source code from GitHub"
+                echo "📥 Checking out source code from GitHub"
                 git branch: 'main',
                     url: 'https://github.com/anurajyellurkar/flight_booking_final16-.git'
             }
@@ -19,7 +20,7 @@ pipeline {
             steps {
                 echo "🔐 Running Trivy security scan"
                 sh '''
-                trivy fs --exit-code 0 --severity HIGH,CRITICAL .
+                ${TRIVY_PATH} fs --exit-code 0 --severity HIGH,CRITICAL .
                 '''
             }
         }
