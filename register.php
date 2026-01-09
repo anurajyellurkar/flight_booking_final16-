@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php include 'partials/header.php'; ?>
 
-<h2>Register</h2>
+<h2>Register here its anuraj</h2>
 
 <?php if ($message): ?>
   <div class="card" style="color:#ff6b6b">
