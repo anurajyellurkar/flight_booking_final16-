@@ -3,28 +3,34 @@ pipeline {
 
     environment {
         IMAGE_NAME = "flight-booking:latest"
-        TRIVY_PATH = "/opt/homebrew/bin/trivy"
-        TRIVY_DISABLE_DOCKER_CREDENTIALS = "true"
-        TRIVY_SKIP_DB_UPDATE = "true"
+        TRIVY = "/opt/homebrew/bin/trivy"
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                echo "📥 Checking out source code from GitHub"
+                echo "📥 Checking out source code"
                 git branch: 'main',
                     url: 'https://github.com/anurajyellurkar/flight_booking_final16-.git'
             }
         }
 
-        stage('Security Scan - Trivy') {
+        stage('Security Scan - Trivy (Offline Safe)') {
             steps {
-                echo "🔐 Running Trivy security scan"
+                echo "🔐 Running Trivy filesystem scan (offline-safe)"
                 sh '''
                 export TRIVY_DISABLE_DOCKER_CREDENTIALS=true
-                export TRIVY_SKIP_DB_UPDATE=true
-                ${TRIVY_PATH} fs --exit-code 0 --severity HIGH,CRITICAL .
+                export TRIVY_OFFLINE_SCAN=true
+                export TRIVY_NO_PROGRESS=true
+
+                ${TRIVY} fs \
+                  --skip-db-update \
+                  --skip-java-db-update \
+                  --ignore-unfixed \
+                  --severity HIGH,CRITICAL \
+                  --exit-code 0 \
+                  .
                 '''
             }
         }
@@ -32,15 +38,13 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Building Docker image"
-                sh '''
-                docker build -t ${IMAGE_NAME} .
-                '''
+                sh 'docker build -t ${IMAGE_NAME} .'
             }
         }
 
         stage('Deploy Application (Docker Compose)') {
             steps {
-                echo "🚀 Deploying application using Docker Compose"
+                echo "🚀 Deploying application"
                 sh '''
                 docker compose down
                 docker compose up -d --build
