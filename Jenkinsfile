@@ -5,33 +5,39 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/anurajyellurkar/flight-booking-devops.git'
+                git branch: 'main',
+                    url: 'https://github.com/anurajyellurkar/flight_booking_final16-.git'
             }
         }
 
-        stage('PHP Syntax Check') {
+        stage('Security Scan - Trivy') {
             steps {
-                sh 'php -l src/index.php'
+                sh 'trivy fs --exit-code 0 --severity HIGH,CRITICAL .'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t flight-app:latest .'
+                sh 'docker build -t flight-booking:latest .'
             }
         }
 
-        stage('Trivy Scan') {
+        stage('Deploy with Docker Compose') {
             steps {
-                sh 'trivy image flight-app:latest'
+                sh '''
+                docker-compose down
+                docker-compose up -d --build
+                '''
             }
         }
+    }
 
-        stage('Deploy Application') {
-            steps {
-                sh 'docker-compose down'
-                sh 'docker-compose up -d'
-            }
+    post {
+        success {
+            echo "✅ CI/CD Pipeline Succeeded"
+        }
+        failure {
+            echo "❌ CI/CD Pipeline Failed"
         }
     }
 }
