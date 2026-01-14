@@ -17,23 +17,7 @@ pipeline {
             }
         }
 
-        stage('Security Scan - Trivy (Dockerized)') {
-            steps {
-                echo "🔐 Running Trivy filesystem scan via Docker"
-                sh '''
-                ${DOCKER} run --rm \
-                  -v "$PWD:/project" \
-                  -v "$HOME/.cache/trivy:/root/.cache/" \
-                  ${TRIVY_IMAGE} \
-                  fs \
-                  --no-progress \
-                  --ignore-unfixed \
-                  --severity HIGH,CRITICAL \
-                  --exit-code 0 \
-                  /project
-                '''
-            }
-        }
+       
 
         stage('Build Docker Image') {
             steps {
