@@ -2,10 +2,10 @@
 require_once __DIR__ . '/bootstrap.php';
 
 // Database configuration
-$host = 'db';
-$user = 'root';
-$password = 'root';
-$database = 'flight_booking';
+$host = "db";
+$user = "flightuser";
+$pass = "flightpass";
+$db   = "flight_booking";
 
 $conn = new mysqli($host, $user, $password, $database);
 
