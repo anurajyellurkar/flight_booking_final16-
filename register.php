@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php include 'partials/header.php'; ?>
 
-<h2>Register here it is now updated with anuraj </h2>
+<h2>Register here  </h2>
 
 
 <?php if ($message): ?>
