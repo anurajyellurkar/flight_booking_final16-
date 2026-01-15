@@ -1,27 +1,33 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+    }
+
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/anurajyellurkar/flight_booking_final16-.git'
+                git 'https://github.com/anurajyellurkar/flight_booking_final16-.git'
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Trivy Security Scan') {
             steps {
-                sh 'docker compose build'
+                sh 'trivy fs --exit-code 0 --severity HIGH,CRITICAL .'
             }
         }
 
-        stage('Deploy') {
+        stage('Build Docker Containers') {
             steps {
-                sh '''
-                  docker compose down || true
-                  docker compose up -d
-                '''
+                sh 'docker-compose build'
+            }
+        }
+
+        stage('Deploy Application') {
+            steps {
+                sh 'docker-compose up -d'
             }
         }
     }
