@@ -7,7 +7,7 @@ $user = "flightuser";
 $pass = "flightpass";
 $db   = "flight_booking";
 
-$conn = new mysqli($host, $user, $password, $database);
+$conn = new mysqli($host, $user, $pass, $db);
 
 if ($conn->connect_error) {
     die("DB Connection failed: " . $conn->connect_error);
