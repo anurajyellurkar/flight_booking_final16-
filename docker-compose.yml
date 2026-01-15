@@ -1,29 +1,23 @@
-name: flight-booking
+version: '3.8'
 
 services:
-  web:
+  app:
     build: .
     ports:
-      - "8095:80"        # Web app
+      - "80:80"
     depends_on:
       - db
-    environment:
-      DB_HOST: db
-      DB_USER: root
-      DB_PASSWORD: root
-      DB_NAME: flight_booking
-    restart: always
 
   db:
-    image: mysql:8.0
-    restart: always
+    image: mariadb:10.6
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: flight_booking
+      MYSQL_USER: flightuser
+      MYSQL_PASSWORD: flightpass
     volumes:
-      - db_data:/var/lib/mysql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-    # ❌ no ports → avoids conflicts
+      - dbdata:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
 volumes:
-  db_data:
+  dbdata:
