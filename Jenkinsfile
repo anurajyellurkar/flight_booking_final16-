@@ -7,12 +7,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout Code') {
-            steps {
-                git 'https://github.com/anurajyellurkar/flight_booking_final16-.git'
-            }
-        }
-
         stage('Trivy Security Scan') {
             steps {
                 sh 'trivy fs --exit-code 0 --severity HIGH,CRITICAL .'
