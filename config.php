@@ -4,7 +4,7 @@ require_once __DIR__ . '/bootstrap.php';
 // Database configuration
 $host = "db";
 $user = "flightuser";
-$pass = "flightpass";
+$pass = "***";
 $db   = "flight_booking";
 
 $conn = new mysqli($host, $user, $pass, $db);
