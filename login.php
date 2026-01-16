@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 include 'partials/header.php';
 ?>
-<h2>Login </h2>
+<h2>Login here </h2>
 <?php if(!empty($error)) echo "<div class='card'>$error</div>"; ?>
 <form method="POST" class="card">
 <input name="email" required><br><br>
