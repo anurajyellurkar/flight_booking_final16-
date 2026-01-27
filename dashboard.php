@@ -64,7 +64,7 @@ include 'partials/header.php';
         <?php if ($p['cancel_status'] === 'ACTIVE'): ?>
           <span style="color:#7CFF7C;font-weight:bold">ACTIVE</span>
         <?php else: ?>
-          <span style="color:#FF6B6B;font-weight:bold">CANCELLED</span>
+          <span style="color:#FF6B6B;font-weight:bold">CANCELLED By admin</span>
         <?php endif; ?>
       </td>
 
