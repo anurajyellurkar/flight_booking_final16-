@@ -15,7 +15,7 @@ include 'partials/header.php';
   <label>Date</label><br>
   <input type="date" name="date" required><br><br>
 
-  <button type="submit">Search Flights</button>
+  <button type="submit">Search Flight</button>
 </form>
 
 <?php include 'partials/footer.php'; ?>
