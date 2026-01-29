@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php include 'partials/header.php'; ?>
 
-<h2>Register HERE</h2>
+<h2>Register Only</h2>
 
 
 <?php if ($message): ?>
